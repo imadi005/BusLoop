@@ -1,0 +1,13 @@
+.env
+.env.*
+!.env.example
+
+node_modules/
+dist/
+.vercel/
+.npm-cache/
+.supabase-home/
+supabase/.temp/
+
+*.log
+~$*.docx

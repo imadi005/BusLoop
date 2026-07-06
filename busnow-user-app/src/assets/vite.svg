@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 192 192" role="img" aria-labelledby="title">
+  <title id="title">BusLoop</title>
+  <rect width="192" height="192" rx="44" fill="#fff"/>
+  <path d="M119 29a54 54 0 0 1 47 76h-24a34 34 0 0 0-51-40L79 47a54 54 0 0 1 40-18Z" fill="#EF3E42"/>
+  <path d="M44 62h56c14 0 25 11 25 25v35c0 14-11 25-25 25H44c-14 0-25-11-25-25V87c0-14 11-25 25-25Z" fill="#101828"/>
+  <path d="M39 82h65c5 0 9 4 9 9v26c0 5-4 9-9 9H39c-5 0-9-4-9-9V91c0-5 4-9 9-9Z" fill="#fff"/>
+  <path d="M30 126h84v16H30z" fill="#EF3E42"/>
+  <path d="M52 71h42c5 0 5 11 0 11H52c-5 0-5-11 0-11Z" fill="#fff"/>
+  <path d="M115 108h45c8 0 14 6 14 14v24c0 8-6 14-14 14h-45c-8 0-14-6-14-14v-24c0-8 6-14 14-14Z" fill="#fff" stroke="#101828" stroke-width="8"/>
+  <path d="M119 123h13v13h-13zm25 0h13v13h-13zm-25 25h13v13h-13zm25 25h13v-13h-13zm-6-26h7v7h-7zm13 7h7v7h-7zm-20 13h7v7h-7z" fill="#101828"/>
+  <circle cx="161" cy="159" r="22" fill="#12B76A"/>
+  <circle cx="161" cy="159" r="9" fill="#fff"/>
+</svg>
