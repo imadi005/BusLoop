@@ -447,8 +447,8 @@ export default function BusDetailPage() {
       <div className="bus-detail-map-frame" style={{ height: '42vh', flexShrink: 0, position: 'relative', overflow: 'hidden' }}>
         <MapContainer center={mapCenter} zoom={busPos ? 15 : 13} style={{ width: '100%', height: '100%' }} zoomControl={false} attributionControl={false}>
           <TileLayer
-            attribution='&copy; <a href="https://carto.com/attributions">CARTO</a>'
-            url="https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png"
+            attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+            url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
           />
           <LiveBusMarker pos={busPos} color={color} />
         </MapContainer>
