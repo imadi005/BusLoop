@@ -14,6 +14,7 @@ import {
   MapPin,
   Navigation,
   Play,
+  QrCode,
   Radio,
   RefreshCw,
   Route,
@@ -26,6 +27,7 @@ import { useStaffAuth } from '../../context/StaffAuthContext';
 import { tripService, locationService, busService, presetService } from '../../services/api';
 import { MOCK_BUSES } from '../../data/mockData';
 import PlaceSearch from '../../components/PlaceSearch';
+import BusQrModal from '../../components/BusQrModal';
 import { canUseMockData } from '../../config/appMode';
 import { captureError } from '../../utils/observability';
 
@@ -117,6 +119,7 @@ export default function DriverDashboard() {
   const [fromLocation, setFromLocation] = useState(() => localStorage.getItem(LS_KEY_FROM) || '');
   const [toLocation, setToLocation] = useState(() => localStorage.getItem(LS_KEY_TO) || '');
   const [swapping, setSwapping] = useState(false);
+  const [showBusQr, setShowBusQr] = useState(false);
 
   const gpsWatchRef = useRef(null);
   const tripRef = useRef(null);
@@ -551,6 +554,16 @@ export default function DriverDashboard() {
                   </div>
                 </div>
               )}
+              {assignedBus && (
+                <button
+                  className="btn btn--secondary btn--full"
+                  onClick={() => setShowBusQr(true)}
+                  disabled={String(assignedBus.id).startsWith('mock')}
+                  style={{ marginTop: 10, borderRadius: 14 }}
+                >
+                  <QrCode size={16} /> Booking QR
+                </button>
+              )}
             </div>
 
             <div className="card">
@@ -617,6 +630,14 @@ export default function DriverDashboard() {
                 {tripStatus === 'active' ? 'Live' : 'Ended'}
               </span>
             </div>
+            <button
+              className="btn btn--secondary btn--full"
+              onClick={() => setShowBusQr(true)}
+              disabled={String(assignedBus.id).startsWith('mock')}
+              style={{ marginTop: 12, borderRadius: 14 }}
+            >
+              <QrCode size={16} /> Booking QR
+            </button>
           </div>
         )}
 
@@ -768,6 +789,16 @@ export default function DriverDashboard() {
           </div>
         )}
       </div>
+
+      {showBusQr && assignedBus && (
+        <BusQrModal
+          bus={assignedBus}
+          routeLabel={routeText(assignedBus)}
+          accentClass="btn--driver"
+          onClose={() => setShowBusQr(false)}
+          onNotify={notify}
+        />
+      )}
 
       <style>{`
         @keyframes driverPulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:0.45;transform:scale(1.35)} }

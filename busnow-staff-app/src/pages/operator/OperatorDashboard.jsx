@@ -428,22 +428,6 @@ export default function OperatorDashboard() {
             <p>{tabCopy.subtitle}</p>
           </div>
         </div>
-        {activeTab === 'analytics' && (
-          <div className="operator-quick-actions">
-            <button type="button" onClick={() => setActiveTab('buses')}>
-              <Bus size={15} /> Fleet
-            </button>
-            <button type="button" onClick={() => setShowAddBus(true)}>
-              <PlusCircle size={15} /> Add Bus
-            </button>
-            <button type="button" onClick={() => setShowRouteModal(true)}>
-              <Route size={15} /> New Route
-            </button>
-            <button type="button" onClick={() => setShowAddStaff(true)}>
-              <UserPlus size={15} /> Staff
-            </button>
-          </div>
-        )}
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 10, marginBottom: 16 }}>
           <StatCard label="Active"  value={activeBuses.length} color="var(--success)" icon={Activity} sub="on road" />
           <StatCard label="Buses"   value={buses.length}       color="var(--info)" icon={Bus}      sub="total" />
