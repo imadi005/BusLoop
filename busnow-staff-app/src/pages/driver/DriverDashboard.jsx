@@ -68,7 +68,7 @@ L.Icon.Default.mergeOptions({
 });
 
 const createDriverIcon = () => L.divIcon({
-  html: `<div style="width:40px;height:40px;border-radius:50%;background:#2563EB;display:flex;align-items:center;justify-content:center;box-shadow:0 8px 24px rgba(37,99,235,0.35);border:3px solid white;">
+  html: `<div style="width:40px;height:40px;border-radius:50%;background:#EF3E42;display:flex;align-items:center;justify-content:center;box-shadow:0 8px 24px rgba(239,62,66,0.35);border:3px solid white;">
     <svg width="18" height="18" viewBox="0 0 24 24" fill="white"><path d="M4 16c0 .88.39 1.67 1 2.22V20c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-1h8v1c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-1.78c.61-.55 1-1.34 1-2.22V6c0-3.5-3.58-4-8-4S4 2.5 4 6v10zm3.5 1c-.83 0-1.5-.67-1.5-1.5S6.67 14 7.5 14s1.5.67 1.5 1.5S8.33 17 7.5 17zm9 0c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5z"/></svg>
   </div>`,
   className: '',
@@ -615,7 +615,7 @@ export default function DriverDashboard() {
         )}
 
         {tripStatus !== 'idle' && assignedBus && (
-          <div className="card" style={{ borderColor: tripStatus === 'active' ? 'rgba(37,99,235,0.24)' : 'var(--border)', marginBottom: 12 }}>
+          <div className="card" style={{ borderColor: tripStatus === 'active' ? 'rgba(239,62,66,0.24)' : 'var(--border)', marginBottom: 12 }}>
             <div className="row row--between" style={{ gap: 12 }}>
               <div className="row" style={{ gap: 12, minWidth: 0 }}>
                 <div style={{ width: 42, height: 42, borderRadius: 14, background: 'var(--driver-bg)', color: 'var(--driver)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>

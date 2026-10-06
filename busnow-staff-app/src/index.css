@@ -37,8 +37,8 @@
 
   --operator: var(--brand);
   --operator-bg: var(--brand-light);
-  --driver: var(--info);
-  --driver-bg: var(--info-bg);
+  --driver: var(--brand);
+  --driver-bg: var(--brand-light);
   --checker: var(--success);
   --checker-bg: var(--success-bg);
 
@@ -474,7 +474,7 @@ input, select, textarea { font-family: var(--font-body); color: var(--text-prima
 .btn--operator { background: var(--operator); color: white; }
 .btn--operator:hover { background: var(--brand-dark); transform: translateY(-1px); }
 .btn--driver { background: var(--driver); color: white; }
-.btn--driver:hover { background: #1D4ED8; transform: translateY(-1px); }
+.btn--driver:hover { background: var(--brand-dark); transform: translateY(-1px); }
 .btn--checker { background: var(--checker); color: white; }
 .btn--checker:hover { background: var(--success); transform: translateY(-1px); }
 .btn--danger { background: var(--danger); color: white; }

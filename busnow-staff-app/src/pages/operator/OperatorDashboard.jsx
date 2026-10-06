@@ -2,18 +2,17 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   Bus, LogOut, PlusCircle, RefreshCw, Route, MapPin,
-  ChevronDown, ChevronUp, X, Check, BarChart2, Users,
+  ChevronDown, ChevronUp, X, Check, Users,
   Radio, Camera, UserPlus, UserX, UserCheck, Phone, Mail,
-  Settings, Trash2, AlertTriangle, Activity, QrCode, Download, Copy,
+  Trash2, AlertTriangle, Activity, QrCode,
 } from 'lucide-react';
 import { busService, routeService, staffService, presetService } from '../../services/api';
 import { useStaffAuth } from '../../context/StaffAuthContext';
 import { MOCK_BUSES } from '../../data/mockData';
-import OperatorAnalytics from './OperatorAnalytics';
+import BusQrModal from '../../components/BusQrModal';
 import MapPicker from './MapPicker';
 import LiveBusMapModal from './LiveBusMapModal';
 import PlaceSearch from '../../components/PlaceSearch';
-import { drawTicketQR } from '../../utils/qrCanvas';
 import { canUseMockData } from '../../config/appMode';
 import { captureError } from '../../utils/observability';
 
@@ -135,9 +134,8 @@ export default function OperatorDashboard() {
   const navigate = useNavigate();
   const { user, profile, signOut } = useStaffAuth();
   const photoInputRef = useRef(null);
-  const busQrCanvasRef = useRef(null);
 
-  const [activeTab, setActiveTab]   = useState('analytics');
+  const [activeTab, setActiveTab]   = useState('buses');
   const [buses, setBuses]           = useState([]);
   const [routes, setRoutes]         = useState([]);
   const [allStaff, setAllStaff]     = useState([]);
@@ -193,15 +191,6 @@ export default function OperatorDashboard() {
 
   useEffect(() => { loadAll(); }, [loadAll]);
 
-  useEffect(() => {
-    if (!showBusQr || !busQrCanvasRef.current) return;
-    drawTicketQR(busQrCanvasRef.current, showBusQr.id, {
-      size: 220,
-      dark: '#101828',
-      light: '#ffffff',
-    });
-  }, [showBusQr]);
-
   const handleLogout = async () => { await signOut().catch(()=>{}); navigate('/'); };
 
   const handleAssign = async () => {
@@ -253,27 +242,6 @@ export default function OperatorDashboard() {
   };
 
   const isRealBus = (bus) => Boolean(bus?.id && !String(bus.id).startsWith('mock') && String(bus.id).includes('-'));
-
-  const handleCopyBusQr = async (bus) => {
-    if (!bus?.id) return;
-    try {
-      await navigator.clipboard.writeText(bus.id);
-      notify('Bus QR ID copied');
-    } catch {
-      notify('Copy failed. Long-press the ID to copy.', true);
-    }
-  };
-
-  const handleDownloadBusQr = (bus) => {
-    const canvas = busQrCanvasRef.current;
-    if (!canvas || !bus?.id) return;
-    const link = document.createElement('a');
-    const safeName = String(bus.registration_no || bus.name || 'bus').replace(/[^a-z0-9-]+/gi, '-').replace(/^-|-$/g, '');
-    link.download = `${safeName || 'bus'}-qr.png`;
-    link.href = canvas.toDataURL('image/png');
-    link.click();
-    notify('Bus QR downloaded');
-  };
 
   const handleSetStatus = async (busId, status) => {
     const isMock = String(busId).startsWith('mock') || !String(busId).includes('-');
@@ -353,22 +321,18 @@ export default function OperatorDashboard() {
   const inactiveBuses = buses.filter(b=>b.status==='inactive'||b.status==='maintenance');
 
   const TABS = [
-    { id: 'analytics', label: 'Analytics', icon: BarChart2 },
     { id: 'live',      label: 'Live',      icon: Radio },
     { id: 'buses',     label: 'Buses',     icon: Bus },
     { id: 'routes',    label: 'Routes',    icon: Route },
     { id: 'employees', label: 'Staff',     icon: Users },
-    { id: 'settings',  label: 'Settings',  icon: Settings },
   ];
   const TAB_COPY = {
-    analytics: { title: 'Operator Overview', subtitle: 'Collections, activity, and fleet health' },
     live:      { title: 'Live Operations',    subtitle: `${activeBuses.length} active, ${inactiveBuses.length} offline` },
     buses:     { title: 'Bus Fleet',          subtitle: `${buses.length} buses managed` },
     routes:    { title: 'Routes',             subtitle: `${routes.length} active route${routes.length === 1 ? '' : 's'}` },
     employees: { title: 'Staff',              subtitle: `${allStaff.length} employee${allStaff.length === 1 ? '' : 's'} on record` },
-    settings:  { title: 'Operator Settings',  subtitle: 'Account and fleet summary' },
   };
-  const tabCopy = TAB_COPY[activeTab] || TAB_COPY.analytics;
+  const tabCopy = TAB_COPY[activeTab] || TAB_COPY.buses;
 
   return (
     <div className="page operator-shell">
@@ -438,7 +402,6 @@ export default function OperatorDashboard() {
       {/* ── Tab Content ── */}
       <div className="operator-content">
 
-        {activeTab === 'analytics' && <OperatorAnalytics />}
 
         {/* ── LIVE TAB ── */}
         {activeTab === 'live' && (
@@ -546,6 +509,16 @@ export default function OperatorDashboard() {
                     </div>
                   </div>
 
+                  <button
+                    className="btn btn--secondary btn--full"
+                    onClick={() => setShowBusQr(bus)}
+                    disabled={!isRealBus(bus)}
+                    title={isRealBus(bus) ? 'Show booking QR' : 'QR is available for saved buses only'}
+                    style={{ marginTop: 12, borderRadius: 14 }}
+                  >
+                    <QrCode size={16} /> Booking QR
+                  </button>
+
                   {/* Action row */}
                   <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginTop: 12, paddingTop: 10, borderTop: '1px solid var(--border)' }}>
                     <button
@@ -553,21 +526,6 @@ export default function OperatorDashboard() {
                       style={{ flex: '1 1 86px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 5, background: 'rgba(239,62,66,0.12)', color: 'var(--brand)', border: '1px solid rgba(239,62,66,0.25)', borderRadius: 10, padding: '8px', cursor: 'pointer', fontFamily: 'var(--font-main)', fontWeight: 600, fontSize: '0.78rem' }}
                     >
                       <Route size={13} /> Route
-                    </button>
-                    <button
-                      onClick={() => setShowBusQr(bus)}
-                      disabled={!isRealBus(bus)}
-                      title={isRealBus(bus) ? 'Show bus QR' : 'QR is available for saved buses only'}
-                      style={{
-                        flex: '1 1 78px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 5,
-                        background: isRealBus(bus) ? 'rgba(37,99,235,0.12)' : 'var(--bg-input)',
-                        color: isRealBus(bus) ? 'var(--info)' : 'var(--text-muted)',
-                        border: `1px solid ${isRealBus(bus) ? 'rgba(37,99,235,0.25)' : 'var(--border)'}`,
-                        borderRadius: 10, padding: '8px', cursor: isRealBus(bus) ? 'pointer' : 'not-allowed',
-                        fontFamily: 'var(--font-main)', fontWeight: 600, fontSize: '0.78rem',
-                      }}
-                    >
-                      <QrCode size={13} /> QR
                     </button>
                     <button
                       onClick={() => setShowLiveMapBus(bus)}
@@ -766,69 +724,6 @@ export default function OperatorDashboard() {
             })}
           </div>
         )}
-
-        {/* ── SETTINGS TAB ── */}
-        {activeTab === 'settings' && (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
-            {/* Account card */}
-            <div style={{
-              background: 'linear-gradient(135deg, rgba(239,62,66,0.1), rgba(239,62,66,0.04))',
-              border: '1.5px solid rgba(239,62,66,0.25)',
-              borderRadius: 20, padding: '20px',
-            }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 14, marginBottom: 16 }}>
-                <div style={{
-                  width: 54, height: 54, borderRadius: '50%', flexShrink: 0,
-                  background: 'linear-gradient(135deg, var(--brand), var(--brand-dark))',
-                  display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  fontSize: '1.5rem', fontWeight: 800, color: 'white',
-                }}>
-                  {(profile?.full_name || user?.email || 'O')[0].toUpperCase()}
-                </div>
-                <div>
-                  <div style={{ fontWeight: 800, fontSize: '1.0625rem' }}>{profile?.full_name || 'Operator'}</div>
-                  <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>{user?.email}</div>
-                  <div style={{ marginTop: 4 }}>
-                    <span style={{ background: 'rgba(239,62,66,0.2)', color: 'var(--brand)', padding: '2px 10px', borderRadius: 99, fontSize: '0.68rem', fontWeight: 700 }}>OPERATOR</span>
-                  </div>
-                </div>
-              </div>
-              <button
-                onClick={handleLogout}
-                style={{
-                  width: '100%', padding: '13px', borderRadius: 14,
-                  background: 'rgba(239,62,66,0.12)', color: 'var(--danger)',
-                  border: '1px solid rgba(239,62,66,0.25)',
-                  fontFamily: 'var(--font-main)', fontWeight: 700, fontSize: '0.9375rem',
-                  cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
-                }}
-              >
-                <LogOut size={17} /> Sign Out
-              </button>
-            </div>
-
-            {/* Stats summary */}
-            <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 20, padding: '18px 20px' }}>
-              <div style={{ fontWeight: 700, fontSize: '0.875rem', marginBottom: 14, color: 'var(--text-primary)' }}>Fleet Summary</div>
-              {[
-                { label: 'Total Buses', value: buses.length, color: 'var(--info)' },
-                { label: 'Active Now',  value: activeBuses.length, color: 'var(--success)' },
-                { label: 'Routes',      value: routes.length, color: 'var(--brand)' },
-                { label: 'Staff',       value: allStaff.length, color: 'var(--violet)' },
-              ].map(item => (
-                <div key={item.label} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 0', borderBottom: '1px solid var(--border)' }}>
-                  <span style={{ fontSize: '0.875rem', color: 'var(--text-muted)' }}>{item.label}</span>
-                  <span style={{ fontWeight: 800, fontSize: '1.1rem', color: item.color }}>{item.value}</span>
-                </div>
-              ))}
-            </div>
-
-            {/* App version */}
-            <div style={{ textAlign: 'center', padding: '8px 0' }}>
-              <div style={{ fontSize: '0.72rem', color: 'var(--text-primary)', fontWeight: 600 }}>BusLoop Staff v2.0 · Operator Edition</div>
-            </div>
-          </div>
-        )}
       </div>
 
       {/* ── Bottom Nav ── */}
@@ -935,53 +830,13 @@ export default function OperatorDashboard() {
 
       {/* ── Delete Bus Confirm Modal ── */}
       {showBusQr && (
-        <div className="modal-overlay" onClick={() => setShowBusQr(null)}>
-          <div className="modal-sheet" onClick={e => e.stopPropagation()} style={{ textAlign: 'center' }}>
-            <div className="modal-handle" />
-            <div style={{
-              width: 58, height: 58, borderRadius: 18, margin: '0 auto 12px',
-              background: 'rgba(239,62,66,0.1)', color: 'var(--brand)',
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              border: '1px solid rgba(239,62,66,0.22)',
-            }}>
-              <QrCode size={28} />
-            </div>
-            <h3 style={{ marginBottom: 4 }}>Bus QR Code</h3>
-            <p style={{ color: 'var(--text-muted)', fontSize: '0.84rem', marginBottom: 14 }}>
-              {showBusQr.name} · {showBusQr.registration_no}
-            </p>
-            <div style={{
-              width: 244, height: 244, padding: 12, margin: '0 auto 14px',
-              background: 'white', borderRadius: 20, border: '1px solid var(--border)',
-              boxShadow: '0 12px 32px rgba(16,24,40,0.08)',
-            }}>
-              <canvas ref={busQrCanvasRef} width="220" height="220" style={{ width: 220, height: 220, display: 'block' }} />
-            </div>
-            <div style={{
-              background: 'var(--bg-input)', border: '1px solid var(--border)', borderRadius: 14,
-              padding: '10px 12px', marginBottom: 14, textAlign: 'left',
-            }}>
-              <div style={{ color: 'var(--text-secondary)', fontSize: '0.76rem', fontWeight: 700, textTransform: 'uppercase', marginBottom: 4 }}>
-                QR Payload
-              </div>
-              <div style={{ fontFamily: 'var(--font-mono)', fontSize: '0.72rem', color: 'var(--text-primary)', wordBreak: 'break-all' }}>
-                {showBusQr.id}
-              </div>
-            </div>
-            <p style={{ color: 'var(--text-muted)', fontSize: '0.8rem', lineHeight: 1.45, marginBottom: 16 }}>
-              Stick this QR inside the bus. Passenger scans it from the BusLoop app and lands directly on this bus booking flow.
-            </p>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginBottom: 8 }}>
-              <button className="btn btn--operator" onClick={() => handleDownloadBusQr(showBusQr)}>
-                <Download size={16} /> Download
-              </button>
-              <button className="btn btn--secondary" onClick={() => handleCopyBusQr(showBusQr)}>
-                <Copy size={16} /> Copy ID
-              </button>
-            </div>
-            <button className="btn btn--secondary btn--full" onClick={() => setShowBusQr(null)}>Close</button>
-          </div>
-        </div>
+        <BusQrModal
+          bus={showBusQr}
+          routeLabel={showBusQr.route_name}
+          accentClass="btn--operator"
+          onClose={() => setShowBusQr(null)}
+          onNotify={notify}
+        />
       )}
 
       {showDeleteBusConfirm && (
